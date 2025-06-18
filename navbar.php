@@ -39,7 +39,7 @@
       </ul>
 
       <!-- Admin Button -->
-      <a href="admin/login.php" class="btn btn-warning fw-semibold rounded-pill px-4">
+      <a href="adminlogin.php" class="btn btn-warning fw-semibold rounded-pill px-4">
         Admin
       </a>
     </div>
