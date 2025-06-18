@@ -1,5 +1,5 @@
 <!-- 🍽️ BOOTSTRAP 5 NAVBAR (UPDATED FOR CATERING WEBSITE) -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top ">
   <div class="container">
     <!-- Brand / Logo -->
     <a class="navbar-brand fw-bold text-warning" href="#">
@@ -13,9 +13,12 @@
 
     <!-- Navigation Links -->
     <div class="collapse navbar-collapse" id="navbarMenu">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 ">
 
         <!-- Catering Services -->
+         <li class="nav-item">
+          <a class="nav-link text-light" href="home.php">Home</a>
+        </li>
         <li class="nav-item">
           <a class="nav-link text-light" href="wedding.php">Wedding Catering</a>
         </li>

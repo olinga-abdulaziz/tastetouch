@@ -24,7 +24,7 @@
 <body class="bg-light">
 
   <!-- Hero Section -->
-  <section class="bg-warning text-dark text-center py-5">
+  <section class="bg-dark  text-white text-center py-5">
     <div class="container">
       <h1 class="display-5 fw-bold">Birthday Catering Services</h1>
       <p class="lead">Make every birthday unforgettable with our festive food and vibrant service.</p>
