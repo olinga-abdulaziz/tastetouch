@@ -22,6 +22,13 @@
 <body class="bg-light">
 
   <?php include('navbar.php'); ?>
+  <section class="bg-dark text-white text-center py-5 mb-4">
+  <div class="container">
+    <h1 class="display-4 fw-bold">🍽️ Welcome to Our Catering Services</h1>
+    <p class="lead">From weddings to corporate events and birthdays, we serve delicious memories.</p>
+    <a href="#wedding" class="btn btn-warning btn-lg mt-3">Explore Services</a>
+  </div>
+</section>
 
   <div class="container py-5">
     <h2 class="text-center mb-4">📅 Book a Catering Service</h2>
