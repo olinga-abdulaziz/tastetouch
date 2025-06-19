@@ -151,10 +151,10 @@ try {
         <nav>
             <a href="admindashboard.php"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
             <a href="customer.php" class="active"><i class="fas fa-users me-2"></i> Manage Customers</a>
-            <a href="services.html"><i class="fas fa-utensils me-2"></i> Manage Services</a>
-            <a href="bookings.html"><i class="fas fa-calendar-check me-2"></i> View Bookings</a>
-            <a href="reports.html"><i class="fas fa-chart-bar me-2"></i> Generate Reports</a>
-            <a href="admin-login.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
+            <a href="services.php"><i class="fas fa-utensils me-2"></i> Manage Services</a>
+            <a href="bookings.php"><i class="fas fa-calendar-check me-2"></i> View Bookings</a>
+            <a href="reports.php"><i class="fas fa-chart-bar me-2"></i> Generate Reports</a>
+            <a href="adminlogin.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
         </nav>
     </div>
     <div class="content">
