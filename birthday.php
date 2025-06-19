@@ -1,3 +1,4 @@
+
 <?php
 // Database credentials
 $servername = "";
@@ -33,6 +34,7 @@ $tableSql = "CREATE TABLE IF NOT EXISTS bookings (
     event_date DATE NOT NULL,
     venue VARCHAR(255) NOT NULL,
     people_count INT NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
     additional_info TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )";
@@ -61,11 +63,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $people_count = (int)$_POST['people_count'];
     $additional_info = $conn->real_escape_string($_POST['additional_info']);
 
-    $insertSql = "INSERT INTO bookings (service_type, client_name, client_email, client_phone, event_date, venue, people_count, additional_info)
-                  VALUES ('$service_type', '$client_name', '$client_email', '$client_phone', '$event_date', '$venue', $people_count, '$additional_info')";
+    // Calculate total amount
+    if ($people_count <= 4) {
+        $total_amount = 10000.00; // Base price for 1-4 people
+    } elseif ($people_count <= 9) {
+        $total_amount = 12500.00 + ($people_count - 5) * 500.00; // Ksh12,500 + Ksh500 per person above 4
+    } elseif ($people_count <= 20) {
+        $total_amount = 20000.00; // Flat rate for 10-20 people
+    } else {
+        $total_amount = 20000.00 + ($people_count - 20) * 300.00; // Ksh20,000 + Ksh300 per person above 20
+    }
+
+    $insertSql = "INSERT INTO bookings (service_type, client_name, client_email, client_phone, event_date, venue, people_count, total_amount, additional_info)
+                  VALUES ('$service_type', '$client_name', '$client_email', '$client_phone', '$event_date', '$venue', $people_count, $total_amount, '$additional_info')";
 
     if ($conn->query($insertSql)) {
-        $successMsg = "Booked successfully";
+        $successMsg = "Booked successfully! Total Amount: Ksh" . number_format($total_amount, 2);
     } else {
         $errorMsg = "Error: " . $conn->error;
     }
@@ -92,6 +105,12 @@ $conn->close();
     }
     .service-card:hover {
       transform: scale(1.03);
+    }
+    .total-amount {
+      font-size: 1.1em;
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
     }
   </style>
 </head>
@@ -160,12 +179,13 @@ $conn->close();
             </div>
             <div class="col-md-6">
               <label class="form-label">Number of People</label>
-              <input type="number" name="people_count" class="form-control" min="1" required>
+              <input type="number" name="people_count" class="form-control" min="1" required oninput="calculateTotal(this)">
             </div>
             <div class="col-12">
               <label class="form-label">Additional Info</label>
               <textarea name="additional_info" class="form-control" rows="3"></textarea>
             </div>
+            <div class="col-12 total-amount" id="totalAmount">Total Amount: Ksh0.00</div>
           </div>
           <div class="mt-4 text-center">
             <button type="submit" class="btn btn-primary px-5">Submit Booking</button>
@@ -176,5 +196,23 @@ $conn->close();
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function calculateTotal(input) {
+      const people = parseInt(input.value);
+      let total = 0;
+      if (people > 0) {
+        if (people <= 4) {
+          total = 10000;
+        } else if (people <= 9) {
+          total = 12500 + (people - 5) * 500;
+        } else if (people <= 20) {
+          total = 20000;
+        } else {
+          total = 20000 + (people - 20) * 300;
+        }
+      }
+      document.getElementById('totalAmount').textContent = `Total Amount: Ksh${total.toLocaleString('en-KE', { minimumFractionDigits: 2 })}`;
+    }
+  </script>
 </body>
 </html>

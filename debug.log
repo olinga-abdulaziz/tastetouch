@@ -1,0 +1,12 @@
+[2025-06-19 21:41:53] Starting wedding.php
+[2025-06-19 21:41:53] Connected to MySQL server
+[2025-06-19 21:41:53] Database cateringdb ensured
+[2025-06-19 21:41:53] Bookings table ensured
+[2025-06-19 21:41:53] total_amount column not found, attempting to add
+[2025-06-19 21:41:53] total_amount column added successfully
+[2025-06-19 21:42:18] Starting wedding.php
+[2025-06-19 21:42:18] Connected to MySQL server
+[2025-06-19 21:42:18] Database cateringdb ensured
+[2025-06-19 21:42:18] Bookings table ensured
+[2025-06-19 21:42:18] total_amount column already exists
+[2025-06-19 21:42:18] Booking inserted successfully

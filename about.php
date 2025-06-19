@@ -29,7 +29,7 @@
                     </p>
                 </div>
                 <div class="col-lg-6">
-                    <img src="images/catering.jpg" alt="Catering Services" class="img-fluid rounded">
+                    <img src="uploads/catering.jpg" alt="Catering Services" class="img-fluid rounded">
                 </div>
             </div>
         </div>
