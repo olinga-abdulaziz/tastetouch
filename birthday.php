@@ -40,6 +40,16 @@ if (!$conn->query($tableSql)) {
     die("Table creation failed: " . $conn->error);
 }
 
+// Fetch birthday services from database
+$services = [];
+$result = $conn->query("SELECT service_type, description, image_path FROM services WHERE service_type = 'Birthday'");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $services[] = $row;
+    }
+    $result->free();
+}
+
 // Insert booking data if form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $service_type = $conn->real_escape_string($_POST['service_type']);
@@ -68,7 +78,7 @@ $conn->close();
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Corporate Catering Booking</title>
+  <title>Birthday Catering Booking</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
@@ -92,77 +102,32 @@ $conn->close();
   <!-- Hero Section -->
   <section class="bg-dark text-white text-center py-5">
     <div class="container">
-      <h1 class="display-5 fw-bold">Corporate Catering Services</h1>
-      <p class="lead">Professional catering for meetings, conferences, and business events.</p>
+      <h1 class="display-5 fw-bold">Birthday Catering Services</h1>
+      <p class="lead">Fun and delicious menus for birthday celebrations of all ages.</p>
     </div>
   </section>
 
   <!-- Menu Highlights -->
   <section class="container py-5">
-    <h2 class="text-center mb-4">🥗 Our Corporate Menu Highlights</h2>
+    <h2 class="text-center mb-4">🎂 Our Birthday Menu Highlights</h2>
     <div class="row row-cols-1 row-cols-md-3 g-4">
-
-      <!-- Breakfast -->
-      <div class="col">
-        <div class="card h-100">
-          <img src="images/breakfast.jpg" class="card-img-top" alt="Breakfast">
-          <div class="card-body">
-            <h5 class="card-title">Breakfast</h5>
-            <p class="card-text">Pastries, fruit platters, tea, coffee, and juices.</p>
+      <?php foreach ($services as $service): ?>
+        <div class="col">
+          <div class="card h-100">
+            <img src="<?php echo htmlspecialchars($service['image_path']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($service['service_type']); ?>">
+            <div class="card-body">
+              <h5 class="card-title"><?php echo htmlspecialchars($service['service_type']); ?></h5>
+              <p class="card-text"><?php echo htmlspecialchars($service['description']); ?></p>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- Lunch -->
-      <div class="col">
-        <div class="card h-100">
-          <img src="images/lunch.jpg" class="card-img-top" alt="Lunch">
-          <div class="card-body">
-            <h5 class="card-title">Lunch</h5>
-            <p class="card-text">Buffet options, sandwiches, salads, and hot meals.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Snacks -->
-      <div class="col">
-        <div class="card h-100">
-          <img src="images/snacks.jpg" class="card-img-top" alt="Snacks">
-          <div class="card-body">
-            <h5 class="card-title">Snacks</h5>
-            <p class="card-text">Cookies, nuts, cheese platters, and more.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Drinks -->
-      <div class="col">
-        <div class="card h-100">
-          <img src="images/corporate-drinks.jpg" class="card-img-top" alt="Drinks">
-          <div class="card-body">
-            <h5 class="card-title">Drinks</h5>
-            <p class="card-text">Soft drinks, water, coffee, and tea stations.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Desserts -->
-      <div class="col">
-        <div class="card h-100">
-          <img src="images/corporate-desserts.jpg" class="card-img-top" alt="Desserts">
-          <div class="card-body">
-            <h5 class="card-title">Desserts</h5>
-            <p class="card-text">Cakes, pastries, and fruit salads.</p>
-          </div>
-        </div>
-      </div>
-
+      <?php endforeach; ?>
     </div>
   </section>
 
   <!-- Booking Form -->
   <section class="container py-5">
-    <h2 class="text-center mb-4">📋 Book Corporate Catering</h2>
+    <h2 class="text-center mb-4">📋 Book Birthday Catering</h2>
     <?php if ($successMsg): ?>
       <div class="alert alert-success text-center"><?php echo $successMsg; ?></div>
     <?php elseif ($errorMsg): ?>
@@ -171,7 +136,7 @@ $conn->close();
     <div class="row justify-content-center">
       <div class="col-md-10">
         <form action="" method="POST" class="bg-white p-4 shadow rounded">
-          <input type="hidden" name="service_type" value="Corporate Catering">
+          <input type="hidden" name="service_type" value="Birthday Catering">
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Full Name</label>

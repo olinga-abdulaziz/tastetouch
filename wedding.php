@@ -40,6 +40,16 @@ if (!$conn->query($tableSql)) {
     die("Table creation failed: " . $conn->error);
 }
 
+// Fetch wedding services from database
+$services = [];
+$result = $conn->query("SELECT service_type, description, image_path FROM services WHERE service_type = 'Wedding'");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $services[] = $row;
+    }
+    $result->free();
+}
+
 // Insert booking data if form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $service_type = $conn->real_escape_string($_POST['service_type']);
@@ -101,62 +111,17 @@ $conn->close();
   <section class="container py-5">
     <h2 class="text-center mb-4">🍽️ Our Wedding Menu Highlights</h2>
     <div class="row row-cols-1 row-cols-md-3 g-4">
-
-      <!-- Appetizers -->
-      <div class="col">
-        <div class="card h-100">
-          <img src="images/appetizers.jpg" class="card-img-top" alt="Appetizers">
-          <div class="card-body">
-            <h5 class="card-title">Appetizers</h5>
-            <p class="card-text">Mini samosas, spring rolls, meatballs, and more.</p>
+      <?php foreach ($services as $service): ?>
+        <div class="col">
+          <div class="card h-100">
+            <img src="<?php echo htmlspecialchars($service['image_path']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($service['service_type']); ?>">
+            <div class="card-body">
+              <h5 class="card-title"><?php echo htmlspecialchars($service['service_type']); ?></h5>
+              <p class="card-text"><?php echo htmlspecialchars($service['description']); ?></p>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- Main Course -->
-      <div class="col">
-        <div class="card h-100">
-          <img src="images/main-course.jpg" class="card-img-top" alt="Main Course">
-          <div class="card-body">
-            <h5 class="card-title">Main Courses</h5>
-            <p class="card-text">Pilau, biryani, roasted chicken, ugali, vegetables, and beef stew.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Desserts -->
-      <div class="col">
-        <div class="card h-100">
-          <img src="images/desserts.jpg" class="card-img-top" alt="Desserts">
-          <div class="card-body">
-            <h5 class="card-title">Desserts</h5>
-            <p class="card-text">Fruit platters, cupcakes, chocolate fountains, and traditional sweets.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Drinks -->
-      <div class="col">
-        <div class="card h-100">
-          <img src="images/drinks.jpg" class="card-img-top" alt="Drinks">
-          <div class="card-body">
-            <h5 class="card-title">Drinks</h5>
-            <p class="card-text">Fresh juices, soft drinks, mocktails, and water stations.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Cakes -->
-      <div class="col">
-        <div class="card h-100">
-          <img src="images/cakes.jpg" class="card-img-top" alt="Cakes">
-          <div class="card-body">
-            <h5 class="card-title">Cakes</h5>
-            <p class="card-text">Wedding Cakes.</p>
-          </div>
-        </div>
-      </div>
-
+      <?php endforeach; ?>
     </div>
   </section>
 
