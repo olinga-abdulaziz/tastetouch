@@ -47,6 +47,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['service_type'])) {
     $conn->close();
     exit;
 }
+
+// Fetch services from database
+$conn = new mysqli($servername, $username, $password, $dbname);
+$services = [];
+if (!$conn->connect_error) {
+    $result = $conn->query("SELECT service_type, description, image_path FROM services");
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $services[] = $row;
+        }
+        $result->free();
+    }
+    $conn->close();
+}
 ?>
 
 <!DOCTYPE html>
@@ -77,50 +91,31 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['service_type'])) {
 <div class="container py-5" id="services">
   <h2 class="text-center mb-4">📅 Book a Catering Service</h2>
   <div class="row row-cols-1 row-cols-md-3 g-4">
-    <!-- Wedding Card -->
-    <div class="col">
-      <div class="card service-card" data-bs-toggle="modal" data-bs-target="#weddingModal">
-        <img src="images/wedding.jpg" class="card-img-top" alt="Wedding Catering">
-        <div class="card-body text-center">
-          <h5 class="card-title">Wedding Catering</h5>
-          <p class="card-text">Elegant menus and service for your special day.</p>
+    <?php foreach ($services as $index => $service): ?>
+      <div class="col">
+        <div class="card service-card" data-bs-toggle="modal" data-bs-target="#serviceModal<?php echo $index; ?>">
+          <img src="<?php echo htmlspecialchars($service['image_path']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($service['service_type']); ?>">
+          <div class="card-body text-center">
+            <h5 class="card-title"><?php echo htmlspecialchars($service['service_type']); ?></h5>
+            <p class="card-text"><?php echo htmlspecialchars($service['description']); ?></p>
+          </div>
         </div>
       </div>
-    </div>
-    <!-- Corporate Card -->
-    <div class="col">
-      <div class="card service-card" data-bs-toggle="modal" data-bs-target="#corporateModal">
-        <img src="images/corporate.jpg" class="card-img-top" alt="Corporate Catering">
-        <div class="card-body text-center">
-          <h5 class="card-title">Corporate Catering</h5>
-          <p class="card-text">Professional catering for meetings and events.</p>
-        </div>
-      </div>
-    </div>
-    <!-- Birthday Card -->
-    <div class="col">
-      <div class="card service-card" data-bs-toggle="modal" data-bs-target="#birthdayModal">
-        <img src="images/birthday.jpg" class="card-img-top" alt="Birthday Catering">
-        <div class="card-body text-center">
-          <h5 class="card-title">Birthday Catering</h5>
-          <p class="card-text">Fun and delicious menus for all ages.</p>
-        </div>
-      </div>
-    </div>
+    <?php endforeach; ?>
   </div>
 </div>
 
-<!-- Wedding Modal -->
-<div class="modal fade" id="weddingModal" tabindex="-1">
+<?php foreach ($services as $index => $service): ?>
+<div class="modal fade" id="serviceModal<?php echo $index; ?>" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <form class="booking-form" data-service="Wedding Catering" autocomplete="off">
+      <form class="booking-form" data-service="<?php echo htmlspecialchars($service['service_type']); ?>" autocomplete="off">
         <div class="modal-header">
-          <h5 class="modal-title">Wedding Catering Booking</h5>
+          <h5 class="modal-title"><?php echo htmlspecialchars($service['service_type']); ?> Booking</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body row g-3">
-          <div class="col-12" id="weddingResponse"></div>
+          <div class="col-12" id="serviceResponse<?php echo $index; ?>"></div>
           <div class="col-md-6">
             <label class="form-label">Full Name</label>
             <input type="text" name="client_name" class="form-control" required>
@@ -157,102 +152,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['service_type'])) {
     </div>
   </div>
 </div>
-
-<!-- Corporate Modal -->
-<div class="modal fade" id="corporateModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <form class="booking-form" data-service="Corporate Catering" autocomplete="off">
-        <div class="modal-header">
-          <h5 class="modal-title">Corporate Catering Booking</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body row g-3">
-          <div class="col-12" id="corporateResponse"></div>
-          <div class="col-md-6">
-            <label class="form-label">Full Name</label>
-            <input type="text" name="client_name" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Email</label>
-            <input type="email" name="client_email" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Phone</label>
-            <input type="tel" name="client_phone" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Event Date</label>
-            <input type="date" name="event_date" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Venue</label>
-            <input type="text" name="venue" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Number of People</label>
-            <input type="number" name="people_count" class="form-control" min="1" required>
-          </div>
-          <div class="col-12">
-            <label class="form-label">Additional Info</label>
-            <textarea name="additional_info" class="form-control" rows="2"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Submit Booking</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- Birthday Modal -->
-<div class="modal fade" id="birthdayModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <form class="booking-form" data-service="Birthday Catering" autocomplete="off">
-        <div class="modal-header">
-          <h5 class="modal-title">Birthday Catering Booking</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body row g-3">
-          <div class="col-12" id="birthdayResponse"></div>
-          <div class="col-md-6">
-            <label class="form-label">Full Name</label>
-            <input type="text" name="client_name" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Email</label>
-            <input type="email" name="client_email" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Phone</label>
-            <input type="tel" name="client_phone" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Event Date</label>
-            <input type="date" name="event_date" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Venue</label>
-            <input type="text" name="venue" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Number of People</label>
-            <input type="number" name="people_count" class="form-control" min="1" required>
-          </div>
-          <div class="col-12">
-            <label class="form-label">Additional Info</label>
-            <textarea name="additional_info" class="form-control" rows="2"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Submit Booking</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+<?php endforeach; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -264,7 +164,7 @@ document.querySelectorAll('.booking-form').forEach(function(form) {
     formData.append('service_type', serviceType);
 
     // Find the response div for this modal
-    var responseDiv = form.querySelector('[id$="Response"]');
+    var responseDiv = form.querySelector('[id^="serviceResponse"]');
 
     fetch('', { // same file
       method: 'POST',
