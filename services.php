@@ -32,6 +32,7 @@ $manage_type = isset($_POST['manage_type']) ? $_POST['manage_type'] : "individua
 $home_service_type = isset($_POST['home_service_type']) ? $_POST['home_service_type'] : "";
 $title = "Add New Service";
 $error = "";
+$success = "";
 
 // Handle form submissions
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -44,36 +45,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($action == "create" || $action == "update") {
         $service_type = $manage_type == "home" ? $_POST['home_service_type'] : $_POST['service_type'];
-        $description = $_POST['description'];
-        $image_path = "";
         
-        // Handle image upload
-        if (!empty($_FILES['image']['name'])) {
-            $image_name = time() . '_' . basename($_FILES['image']['name']);
-            $image_path = $upload_dir . $image_name;
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $image_path)) {
-                // Image uploaded successfully
-            } else {
-                $error = "Failed to upload image.";
+        // Validate service type
+        if ($manage_type == "home" && empty($service_type)) {
+            $error = "Please select a service type for Home Page Services.";
+        } else {
+            $description = $_POST['description'];
+            $image_path = "";
+            
+            // Handle image upload
+            if (!empty($_FILES['image']['name'])) {
+                $image_name = time() . '_' . basename($_FILES['image']['name']);
+                $image_path = $upload_dir . $image_name;
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $image_path)) {
+                    // Image uploaded successfully
+                } else {
+                    $error = "Failed to upload image.";
+                }
+            } elseif ($action == "update" && empty($_FILES['image']['name'])) {
+                // Keep existing image if no new image uploaded
+                $stmt = $conn->prepare("SELECT image_path FROM services WHERE id = ?");
+                $stmt->execute([$_POST['id']]);
+                $image_path = $stmt->fetchColumn();
             }
-        } elseif ($action == "update" && empty($_FILES['image']['name'])) {
-            // Keep existing image if no new image uploaded
-            $stmt = $conn->prepare("SELECT image_path FROM services WHERE id = ?");
-            $stmt->execute([$_POST['id']]);
-            $image_path = $stmt->fetchColumn();
-        }
-        
-        if (!$error) {
-            if ($action == "create") {
-                $stmt = $conn->prepare("INSERT INTO services (service_type, description, image_path) VALUES (?, ?, ?)");
-                $stmt->execute([$service_type, $description, $image_path]);
-            } else {
-                $stmt = $conn->prepare("UPDATE services SET service_type = ?, description = ?, image_path = ? WHERE id = ?");
-                $stmt->execute([$service_type, $description, $image_path, $_POST['id']]);
+            
+            if (!$error) {
+                if ($action == "create") {
+                    $stmt = $conn->prepare("INSERT INTO services (service_type, description, image_path) VALUES (?, ?, ?)");
+                    $stmt->execute([$service_type, $description, $image_path]);
+                    $success = "Service added successfully.";
+                } else {
+                    $stmt = $conn->prepare("UPDATE services SET service_type = ?, description = ?, image_path = ? WHERE id = ?");
+                    $stmt->execute([$service_type, $description, $image_path, $_POST['id']]);
+                    $success = "Service updated successfully.";
+                }
+                // Redirect to clear form
+                header("Location: services.php?manage_type=$manage_type" . ($manage_type == "home" ? "&home_service_type=" . urlencode($home_service_type) : ""));
+                exit();
             }
-            // Redirect to clear form
-            header("Location: services.php?manage_type=$manage_type" . ($manage_type == "home" ? "&home_service_type=" . urlencode($home_service_type) : ""));
-            exit();
         }
     } elseif ($action == "delete") {
         // Delete image file
@@ -86,6 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         $stmt = $conn->prepare("DELETE FROM services WHERE id = ?");
         $stmt->execute([$_POST['id']]);
+        $success = "Service deleted successfully.";
         header("Location: services.php?manage_type=$manage_type" . ($manage_type == "home" ? "&home_service_type=" . urlencode($home_service_type) : ""));
         exit();
     } elseif ($action == "edit") {
@@ -143,10 +153,13 @@ if ($manage_type == "home" && $home_service_type) {
 <body class="text-light">
     <div class="container mt-5">
         <h2 class="text-warning">Manage Catering Services</h2>
-        <p class="mb-3"><a href="admindashboard.php" class="text-light">View AdminDashboard</a> | <a href="customer.php" class="text-light">Manage Customers</a></p>
+        <p class="mb-3"><a href="admindashboard.php" class="text-light">View AdminDashboard</a> | <a href="bookings.php" class="text-light">Manage Bookings</a></p>
         
         <?php if ($error): ?>
             <div class="alert alert-danger"><?php echo $error; ?></div>
+        <?php endif; ?>
+        <?php if ($success): ?>
+            <div class="alert alert-success"><?php echo $success; ?></div>
         <?php endif; ?>
         
         <!-- Management Type Selection -->
