@@ -21,7 +21,36 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-// Fetch customers
+// Fetch total bookings
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) AS total_bookings FROM bookings");
+    $total_bookings = $stmt->fetch(PDO::FETCH_ASSOC)['total_bookings'];
+} catch (PDOException $e) {
+    $total_bookings = 0;
+    error_log("Error fetching bookings: " . $e->getMessage());
+}
+
+// Fetch total customers
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) AS total_customers FROM users");
+    $total_customers = $stmt->fetch(PDO::FETCH_ASSOC)['total_customers'];
+} catch (PDOException $e) {
+    $total_customers = 0;
+    error_log("Error fetching customers: " . $e->getMessage());
+}
+
+// Calculate total revenue (KSH 1000 per person)
+try {
+    $stmt = $pdo->query("SELECT SUM(people_count) AS total_people FROM bookings");
+    $total_people = $stmt->fetch(PDO::FETCH_ASSOC)['total_people'] ?: 0;
+    $price_per_person = 1000; // KSH per person
+    $total_revenue = $total_people * $price_per_person;
+} catch (PDOException $e) {
+    $total_revenue = 0;
+    error_log("Error calculating revenue: " . $e->getMessage());
+}
+
+// Fetch customers for table
 try {
     $stmt = $pdo->query("SELECT id, username, email FROM users");
     $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -29,6 +58,7 @@ try {
     $error = "Error fetching customers: " . $e->getMessage();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -72,6 +102,18 @@ try {
             border: none;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             color: #f8f9fa;
+        }
+        .card-icon {
+            font-size: 2rem;
+            color: #ffc107;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            color: #ffc107;
+        }
+        .card-text {
+            font-size: 2rem;
+            font-weight: bold;
         }
         .table {
             background-color: #343a40;
@@ -119,29 +161,47 @@ try {
             <a href="services.php"><i class="fas fa-utensils me-2"></i> Manage Services</a>
             <a href="bookings.php"><i class="fas fa-calendar-check me-2"></i> View Bookings</a>
             <a href="reports.php"><i class="fas fa-chart-bar me-2"></i> Generate Reports</a>
-            <a href="adminlogin.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
+            <a href="adminlogout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
         </nav>
     </div>
     <div class="content">
         <section id="dashboard">
             <h2 class="mb-4">Dashboard Overview</h2>
-            <div class="row">
+            <div class="row g-4">
+                <!-- Total Bookings Card -->
                 <div class="col-md-4">
-                    <div class="card p-3 mb-4">
-                        <h5>Total Bookings</h5>
-                        <h3>120</h3>
+                    <div class="card p-3">
+                        <div class="card-body d-flex align-items-center">
+                            <i class="fas fa-calendar-check card-icon me-3"></i>
+                            <div>
+                                <h4 class="card-title">Total Bookings</h4>
+                                <p class="card-text"><?php echo htmlspecialchars($total_bookings); ?></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <!-- Total Customers Card -->
                 <div class="col-md-4">
-                    <div class="card p-3 mb-4">
-                        <h5>Active Customers</h5>
-                        <h3>85</h3>
+                    <div class="card p-3">
+                        <div class="card-body d-flex align-items-center">
+                            <i class="fas fa-users card-icon me-3"></i>
+                            <div>
+                                <h4 class="card-title">Total Customers</h4>
+                                <p class="card-text"><?php echo htmlspecialchars($total_customers); ?></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <!-- Total Revenue Card -->
                 <div class="col-md-4">
-                    <div class="card p-3 mb-4">
-                        <h5>Revenue (This Month)</h5>
-                        <h3>$12,500</h3>
+                    <div class="card p-3">
+                        <div class="card-body d-flex align-items-center">
+                            <i class="fas fa-money-bill-wave card-icon me-3"></i>
+                            <div>
+                                <h4 class="card-title">Total Revenue</h4>
+                                <p class="card-text">KSH <?php echo number_format($total_revenue, 0, '.', ','); ?></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -165,7 +225,7 @@ try {
                     <tbody>
                         <?php if (empty($customers)): ?>
                             <tr>
-                                <td colspan="4" class="text-center">No customers found.</td>
+                                <td colspan="3" class="text-center">No customers found.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($customers as $customer): ?>
@@ -181,5 +241,7 @@ try {
             </div>
         </section>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

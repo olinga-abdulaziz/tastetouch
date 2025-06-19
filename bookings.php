@@ -18,7 +18,7 @@ try {
     $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Create bookings table if not exists, with status column
+    // Create bookings table if not exists, without status column
     $sql = "CREATE TABLE IF NOT EXISTS bookings (
         id INT AUTO_INCREMENT PRIMARY KEY,
         service_type VARCHAR(100) NOT NULL,
@@ -29,7 +29,6 @@ try {
         venue VARCHAR(255) NOT NULL,
         people_count INT NOT NULL,
         additional_info TEXT,
-        status ENUM('pending', 'declined') DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )";
     $conn->exec($sql);
@@ -38,19 +37,7 @@ try {
     exit();
 }
 
-// Initialize form variables
-$action = "create";
-$booking_id = "";
-$service_type = "";
-$client_name = "";
-$client_email = "";
-$client_phone = "";
-$event_date = "";
-$venue = "";
-$people_count = "";
-$additional_info = "";
-$status = "pending";
-$title = "Add New Booking";
+// Initialize variables
 $error = "";
 $success = "";
 $filter_service = isset($_GET['service']) ? $_GET['service'] : "";
@@ -59,7 +46,7 @@ $filter_service = isset($_GET['service']) ? $_GET['service'] : "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $action = $_POST['action'];
     
-    if ($action == "create" || $action == "update") {
+    if ($action == "update") {
         $service_type = $_POST['service_type'];
         $client_name = $_POST['client_name'];
         $client_email = $_POST['client_email'];
@@ -68,55 +55,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $venue = $_POST['venue'];
         $people_count = $_POST['people_count'];
         $additional_info = $_POST['additional_info'];
-        $status = $_POST['status'];
         
-        if ($action == "create") {
-            $stmt = $conn->prepare("INSERT INTO bookings (service_type, client_name, client_email, client_phone, event_date, venue, people_count, additional_info, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$service_type, $client_name, $client_email, $client_phone, $event_date, $venue, $people_count, $additional_info, $status]);
-            $success = "Booking added successfully.";
-        } else {
-            $stmt = $conn->prepare("UPDATE bookings SET service_type = ?, client_name = ?, client_email = ?, client_phone = ?, event_date = ?, venue = ?, people_count = ?, additional_info = ?, status = ? WHERE id = ?");
-            $stmt->execute([$service_type, $client_name, $client_email, $client_phone, $event_date, $venue, $people_count, $additional_info, $status, $_POST['id']]);
+        try {
+            $stmt = $conn->prepare("UPDATE bookings SET service_type = ?, client_name = ?, client_email = ?, client_phone = ?, event_date = ?, venue = ?, people_count = ?, additional_info = ? WHERE id = ?");
+            $stmt->execute([$service_type, $client_name, $client_email, $client_phone, $event_date, $venue, $people_count, $additional_info, $_POST['id']]);
             $success = "Booking updated successfully.";
+        } catch(PDOException $e) {
+            $error = "Error updating booking: " . $e->getMessage();
         }
-        // Redirect to clear form
+        // Redirect to maintain filter
         header("Location: bookings.php" . ($filter_service ? "?service=$filter_service" : ""));
         exit();
     } elseif ($action == "delete") {
-        $stmt = $conn->prepare("DELETE FROM bookings WHERE id = ?");
-        $stmt->execute([$_POST['id']]);
-        $success = "Booking deleted successfully.";
-        header("Location: bookings.php" . ($filter_service ? "?service=$filter_service" : ""));
-        exit();
-    } elseif ($action == "decline") {
-        $stmt = $conn->prepare("UPDATE bookings SET status = 'declined' WHERE id = ?");
-        $stmt->execute([$_POST['id']]);
-        $success = "Booking declined successfully.";
-        header("Location: bookings.php" . ($filter_service ? "?service=$filter_service" : ""));
-        exit();
-    } elseif ($action == "edit") {
-        // Populate form for editing
-        $stmt = $conn->prepare("SELECT * FROM bookings WHERE id = ?");
-        $stmt->execute([$_POST['id']]);
-        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($booking) {
-            $action = "update";
-            $booking_id = $booking['id'];
-            $service_type = $booking['service_type'];
-            $client_name = $booking['client_name'];
-            $client_email = $booking['client_email'];
-            $client_phone = $booking['client_phone'];
-            $event_date = $booking['event_date'];
-            $venue = $booking['venue'];
-            $people_count = $booking['people_count'];
-            $additional_info = $booking['additional_info'];
-           
-            $title = "Edit Booking";
+        try {
+            $stmt = $conn->prepare("DELETE FROM bookings WHERE id = ?");
+            $stmt->execute([$_POST['id']]);
+            $success = "Booking deleted successfully.";
+        } catch(PDOException $e) {
+            $error = "Error deleting booking: " . $e->getMessage();
         }
+        header("Location: bookings.php" . ($filter_service ? "?service=$filter_service" : ""));
+        exit();
     }
 }
 
-// Fetch all services for filter and form dropdown
+// Fetch all services for filter dropdown
 $stmt = $conn->query("SELECT DISTINCT service_type FROM services");
 $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -170,12 +133,6 @@ $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
             padding: 2rem;
             background-color: #2c3034;
         }
-        .card {
-            background-color: #343a40;
-            border: none;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            color: #f8f9fa;
-        }
         .table {
             background-color: #343a40;
             color: #f8f9fa;
@@ -223,11 +180,17 @@ $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
             color: #ffc107;
             border-color: #ffc107;
         }
-        .table .status-declined {
-            color: #dc3545;
+        .modal-content {
+            background-color: #343a40;
+            color: #f8f9fa;
+            border-color: #495057;
         }
-        .table .status-pending {
-            color: #ffc107;
+        .modal-header, .modal-footer {
+            border-color: #495057;
+        }
+        .form-control[readonly] {
+            background-color: #495057;
+            opacity: 1;
         }
         @media (max-width: 768px) {
             .sidebar {
@@ -285,62 +248,6 @@ $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </form>
             </div>
 
-            <!-- Create/Update Form -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title"><?php echo $title; ?></h5>
-                    <form method="POST">
-                        <input type="hidden" name="action" value="<?php echo $action; ?>">
-                        <input type="hidden" name="id" value="<?php echo $booking_id; ?>">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Service Type</label>
-                                <select class="form-select" name="service_type" required>
-                                    <?php foreach ($services as $service): ?>
-                                        <option value="<?php echo $service['service_type']; ?>" <?php echo $service_type == $service['service_type'] ? 'selected' : ''; ?>>
-                                            <?php echo ucfirst($service['service_type']); ?> Catering
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Client Name</label>
-                                <input type="text" class="form-control" name="client_name" value="<?php echo htmlspecialchars($client_name); ?>" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" name="client_email" value="<?php echo htmlspecialchars($client_email); ?>" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Phone</label>
-                                <input type="tel" class="form-control" name="client_phone" value="<?php echo htmlspecialchars($client_phone); ?>" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Event Date</label>
-                                <input type="date" class="form-control" name="event_date" value="<?php echo $event_date; ?>" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Venue</label>
-                                <input type="text" class="form-control" name="venue" value="<?php echo htmlspecialchars($venue); ?>" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Number of People</label>
-                                <input type="number" class="form-control" name="people_count" value="<?php echo $people_count; ?>" min="1" required>
-                            </div>
-                           
-                            <div class="col-12">
-                                <label class="form-label">Additional Info</label>
-                                <textarea class="form-control" name="additional_info" rows="3"><?php echo htmlspecialchars($additional_info); ?></textarea>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <button type="submit" class="btn btn-warning">Save Booking</button>
-                            <a href="bookings.php<?php echo $filter_service ? '?service=' . urlencode($filter_service) : ''; ?>" class="btn btn-secondary">Cancel</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <!-- Bookings Table -->
             <div class="table-responsive">
                 <table class="table table-striped">
@@ -360,7 +267,7 @@ $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <tbody>
                         <?php if (empty($bookings)): ?>
                             <tr>
-                                <td colspan="10" class="text-center">No bookings found.</td>
+                                <td colspan="9" class="text-center">No bookings found.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($bookings as $booking): ?>
@@ -373,21 +280,72 @@ $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <td><?php echo $booking['event_date']; ?></td>
                                     <td><?php echo htmlspecialchars($booking['venue']); ?></td>
                                     <td><?php echo $booking['people_count']; ?></td>
-                                   
                                     <td>
-                                        <form method="POST" style="display:inline;">
-                                            <input type="hidden" name="action" value="edit">
-                                            <input type="hidden" name="id" value="<?php echo $booking['id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-warning">Edit</button>
-                                        </form>
+                                        <!-- Edit Button triggers modal -->
+                                        <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editBookingModal<?php echo $booking['id']; ?>">Edit</button>
                                         <form method="POST" style="display:inline;">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="id" value="<?php echo $booking['id']; ?>">
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this booking?')">Delete</button>
                                         </form>
-                                     
                                     </td>
                                 </tr>
+                                <!-- Edit Modal for each booking -->
+                                <div class="modal fade" id="editBookingModal<?php echo $booking['id']; ?>" tabindex="-1" aria-labelledby="editBookingModalLabel<?php echo $booking['id']; ?>" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editBookingModalLabel<?php echo $booking['id']; ?>">Edit Booking</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form method="POST">
+                                                    <input type="hidden" name="action" value="update">
+                                                    <input type="hidden" name="id" value="<?php echo $booking['id']; ?>">
+                                                    <input type="hidden" name="service_type" value="<?php echo htmlspecialchars($booking['service_type']); ?>">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Service Type</label>
+                                                            <input type="text" class="form-control" value="<?php echo ucfirst(htmlspecialchars($booking['service_type'])); ?> Catering" readonly>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Client Name</label>
+                                                            <input type="text" class="form-control" name="client_name" value="<?php echo htmlspecialchars($booking['client_name']); ?>" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Email</label>
+                                                            <input type="email" class="form-control" name="client_email" value="<?php echo htmlspecialchars($booking['client_email']); ?>" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Phone</label>
+                                                            <input type="tel" class="form-control" name="client_phone" value="<?php echo htmlspecialchars($booking['client_phone']); ?>" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Event Date</label>
+                                                            <input type="date" class="form-control" name="event_date" value="<?php echo $booking['event_date']; ?>" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Venue</label>
+                                                            <input type="text" class="form-control" name="venue" value="<?php echo htmlspecialchars($booking['venue']); ?>" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Number of People</label>
+                                                            <input type="number" class="form-control" name="people_count" value="<?php echo $booking['people_count']; ?>" min="1" required>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <label class="form-label">Additional Info</label>
+                                                            <textarea class="form-control" name="additional_info" rows="3"><?php echo htmlspecialchars($booking['additional_info']); ?></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-3">
+                                                        <button type="submit" class="btn btn-warning">Save Changes</button>
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
