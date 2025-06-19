@@ -170,7 +170,7 @@ try {
                     <?php echo htmlspecialchars($error); ?>
                 </div>
             <?php endif; ?>
-            <form action="customer.php" method="POST" class="mb-3">
+            <!-- <form action="customer.php" method="POST" class="mb-3">
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label for="customerName" class="form-label">Name</label>
@@ -184,7 +184,7 @@ try {
                         <button type="submit" class="btn btn-primary">Add Customer</button>
                     </div>
                 </div>
-            </form>
+            </form> -->
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
