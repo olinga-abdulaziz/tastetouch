@@ -208,13 +208,7 @@ $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <label class="form-label">Number of People</label>
                             <input type="number" class="form-control bg-dark text-light border-warning" name="people_count" value="<?php echo $people_count; ?>" min="1" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Status</label>
-                            <select class="form-select bg-dark text-light border-warning" name="status" required>
-                                <option value="pending" <?php echo $status == 'pending' ? 'selected' : ''; ?>>Pending</option>
-                                <option value="declined" <?php echo $status == 'declined' ? 'selected' : ''; ?>>Declined</option>
-                            </select>
-                        </div>
+                        
                         <div class="col-12">
                             <label class="form-label">Additional Info</label>
                             <textarea class="form-control bg-dark text-light border-warning" name="additional_info" rows="3"><?php echo htmlspecialchars($additional_info); ?></textarea>
@@ -240,7 +234,6 @@ $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>Event Date</th>
                     <th>Venue</th>
                     <th>People</th>
-                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -255,9 +248,7 @@ $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <td><?php echo $booking['event_date']; ?></td>
                         <td><?php echo htmlspecialchars($booking['venue']); ?></td>
                         <td><?php echo $booking['people_count']; ?></td>
-                        <td class="status-<?php echo $booking['status']; ?>">
-                            <?php echo ucfirst($booking['status']); ?>
-                        </td>
+                        
                         <td>
                             <form method="POST" style="display:inline;">
                                 <input type="hidden" name="action" value="edit">
@@ -269,13 +260,7 @@ $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <input type="hidden" name="id" value="<?php echo $booking['id']; ?>">
                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this booking?')">Delete</button>
                             </form>
-                            <?php if ($booking['status'] != 'declined'): ?>
-                                <form method="POST" style="display:inline;">
-                                    <input type="hidden" name="action" value="decline">
-                                    <input type="hidden" name="id" value="<?php echo $booking['id']; ?>">
-                                    <button type="submit" class="btn btn-sm btn-secondary" onclick="return confirm('Are you sure you want to decline this booking?')">Decline</button>
-                                </form>
-                            <?php endif; ?>
+                            
                         </td>
                     </tr>
                 <?php endforeach; ?>
